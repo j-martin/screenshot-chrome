@@ -100,8 +100,8 @@ function download(canvas, cfg) {
   link.href = dataURL.replace("image/png", "image/octet-stream");
   const image = document.createElement('img');
   image.setAttribute('src', dataURL);
-  image.setAttribute('width', cfg.totalWidth);
-  image.setAttribute('height', cfg.totalHeight);
+  image.setAttribute('width', 400);
+  image.setAttribute('title', 'Click to download');
   link.appendChild(image);
   document.body.appendChild(link);
 }
