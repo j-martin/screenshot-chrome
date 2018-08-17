@@ -1,6 +1,8 @@
 Change Log:
 
 ```
+2.0.0 - 2018-08-16 - Changing the overall flow of the extension to support newer version of Chrome. 
+                     There is no resizing anymore.
 1.0.4 - 2015-04-15 - Resetting zoom before taking the screenshot.
 1.0.3 - 2015-04-15 - New icon.
 1.0.2 - 2015-04-14 - Grey title bar buttons.
