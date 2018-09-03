@@ -1,6 +1,7 @@
 Change Log:
 
 ```
+2.1.0 - 2018-09-02 - Display an error if trying to capture https://chrome.google.com/webstore
 2.0.0 - 2018-08-16 - Changing the overall flow of the extension to support newer version of Chrome. 
                      There is no resizing anymore.
 1.0.4 - 2015-04-15 - Resetting zoom before taking the screenshot.

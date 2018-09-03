@@ -2,7 +2,7 @@
 // Copyright (c) 2015,2018 Jean-Martin Archer
 // Use of this source code is governed by the MIT License found in LICENSE
 
-function capturePage(cfg) {
+function capturePage(cfg, errorTimeout) {
   function createHiDPICanvas(cfg) {
     const canvas = document.createElement("canvas");
     const w = cfg.totalWidth + cfg.margins.left + cfg.margins.right;
@@ -35,7 +35,7 @@ function capturePage(cfg) {
             h: cfg.totalHeight
           };
           ctx.drawImage(image, coords.x, coords.y, coords.w, coords.h);
-          download(canvas, cfg);
+          display(canvas, cfg, errorTimeout);
         };
         image.src = dataURI;
       }
@@ -93,7 +93,7 @@ function capturePage(cfg) {
   }
 }
 
-function download(canvas, cfg) {
+function display(canvas, cfg, errorTimeout) {
   const link = document.createElement('a');
   link.download = cfg.filename;
   let dataURL = canvas.toDataURL("image/png");
@@ -103,7 +103,9 @@ function download(canvas, cfg) {
   image.setAttribute('width', 400);
   image.setAttribute('title', 'Click to download');
   link.appendChild(image);
+  document.body.innerText = '';
   document.body.appendChild(link);
+  clearTimeout(errorTimeout)
 }
 
 function generateFilename(url) {
@@ -134,6 +136,15 @@ function getPixelRatio() {
 
 (function () {
   chrome.tabs.getSelected(null, function (tab) {
+    if (tab.url.startsWith('https://chrome.google.com/webstore')) {
+      document.body.innerText = 'Unfortunately, due to a restrictions with Google Chrome, ' +
+        'it is not possible to capture a screenshot of: ' +
+        'https://chrome.google.com/webstore.' +
+        '\n\nOther websites should work fine.';
+      return
+    }
+
+    let errorTimeout = setTimeout(() => document.body.innerText = 'Failed to capture the screenshot.', 2000);
     chrome.tabs.setZoom(tab.id, 1.0);
     const PIXEL_RATIO = getPixelRatio();
 
@@ -171,7 +182,7 @@ function getPixelRatio() {
     chrome.tabs.get(tab.id, function (tab) {
       cfg.totalWidth = tab.width;
       cfg.totalHeight = tab.height;
-      capturePage(cfg);
+      capturePage(cfg, errorTimeout);
     });
   });
 })();
