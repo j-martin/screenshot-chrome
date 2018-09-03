@@ -136,10 +136,10 @@ function getPixelRatio() {
 
 (function () {
   chrome.tabs.getSelected(null, function (tab) {
-    if (tab.url.startsWith('https://chrome.google.com/webstore')) {
+    if (tab.url.startsWith('https://chrome.google.com')) {
       document.body.innerText = 'Unfortunately, due to a restrictions with Google Chrome, ' +
         'it is not possible to capture a screenshot of: ' +
-        'https://chrome.google.com/webstore.' +
+        'https://chrome.google.com.' +
         '\n\nOther websites should work fine.';
       return
     }
