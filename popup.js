@@ -2,8 +2,8 @@
 // Copyright (c) 2015,2018 Jean-Martin Archer
 // Use of this source code is governed by the MIT License found in LICENSE
 
-function capturePage(cfg, errorTimeout) {
-  function createHiDPICanvas(cfg) {
+const capturePage = (cfg) => {
+  const createHiDPICanvas = cfg => {
     const canvas = document.createElement("canvas");
     const w = cfg.totalWidth + cfg.margins.left + cfg.margins.right;
     const h = cfg.totalHeight + cfg.margins.top + cfg.margins.bottom + cfg.titleBar.height;
@@ -13,21 +13,21 @@ function capturePage(cfg, errorTimeout) {
     canvas.style.height = h + "px";
     canvas.getContext("2d").setTransform(cfg.pixelRatio, 0, 0, cfg.pixelRatio, 0, 0);
     return canvas;
-  }
+  };
 
   const canvas = createHiDPICanvas(cfg);
   const ctx = canvas.getContext('2d');
 
   chrome.tabs.captureVisibleTab(
-    null, {format: 'png', quality: 100}, function (dataURI) {
+    null, { format: 'png', quality: 100 }, dataURI => {
       if (dataURI) {
         const image = new Image();
         const titleBarImage = new Image();
-        titleBarImage.onload = function () {
+        titleBarImage.onload = () => {
           addTitleBar(ctx, titleBarImage, cfg);
         };
         titleBarImage.src = cfg.titleBar.data;
-        image.onload = function () {
+        image.onload = () => {
           const coords = {
             x: cfg.margins.left,
             y: cfg.margins.top + cfg.titleBar.height,
@@ -35,13 +35,13 @@ function capturePage(cfg, errorTimeout) {
             h: cfg.totalHeight
           };
           ctx.drawImage(image, coords.x, coords.y, coords.w, coords.h);
-          display(canvas, cfg, errorTimeout);
+          showScreenshot(canvas, cfg);
         };
         image.src = dataURI;
       }
     });
 
-  function addTitleBar(ctx, titleBarImage, cfg) {
+  const addTitleBar = (ctx, titleBarImage, cfg) => {
     const leftWidth = cfg.titleBar.leftWidth;
     const rightDx = cfg.margins.left + cfg.totalWidth - cfg.titleBar.rightWidth;
     const offset = cfg.titleBar.offset;
@@ -69,13 +69,13 @@ function capturePage(cfg, errorTimeout) {
     drawBar(ctx, titleBarImage, middleBar);
     drawBar(ctx, titleBarImage, leftBar);
     drawBar(ctx, titleBarImage, rightBar);
-  }
+  };
 
-  function drawBar(ctx, image, coords) {
+  const drawBar = (ctx, image, coords) => {
     ctx.drawImage(image, coords.sx, coords.sy, coords.sw, coords.sh, coords.dx, coords.dy, coords.dw, coords.dh);
-  }
+  };
 
-  function addShadow(ctx, cfg) {
+  const addShadow = (ctx, cfg) => {
     ctx.save();
     const rect = {
       x: cfg.margins.left + cfg.shadow.edgeOffset,
@@ -90,10 +90,10 @@ function capturePage(cfg, errorTimeout) {
     ctx.shadowOffsetY = cfg.shadow.offsetY;
     ctx.fill();
     ctx.restore();
-  }
-}
+  };
+};
 
-function display(canvas, cfg, errorTimeout) {
+const showScreenshot = (canvas, cfg) => {
   const link = document.createElement('a');
   link.download = cfg.filename;
   let dataURL = canvas.toDataURL("image/png");
@@ -105,10 +105,11 @@ function display(canvas, cfg, errorTimeout) {
   link.appendChild(image);
   document.body.innerText = '';
   document.body.appendChild(link);
-  clearTimeout(errorTimeout)
-}
+  clearTimeout(cfg.errorTimeout);
+  chrome.tabs.setZoom(cfg.tab.id, cfg.originalZoom);
+};
 
-function generateFilename(url) {
+const generateFilename = url => {
   let name = url.split('?')[0].split('#')[0];
   if (name) {
     name = name
@@ -124,65 +125,76 @@ function generateFilename(url) {
   }
   name = 'screenshot' + name + '-' + Date.now() + '.png';
   return name;
-}
+};
 
-function getPixelRatio() {
+const getPixelRatio = () => {
   const ctx = document.createElement("canvas").getContext("2d"),
     dpr = window.devicePixelRatio || 1,
     bsr = ctx.webkitBackingStorePixelRatio ||
       ctx.backingStorePixelRatio || 1;
   return dpr / bsr;
-}
+};
 
-(function () {
-  chrome.tabs.getSelected(null, function (tab) {
+const main = () => {
+  chrome.tabs.getSelected(null, tab => {
     if (tab.url.startsWith('https://chrome.google.com')) {
       document.body.innerText = 'Unfortunately, due to a restrictions with Google Chrome, ' +
         'it is not possible to capture a screenshot of: ' +
         'https://chrome.google.com.' +
         '\n\nOther websites should work fine.';
-      return
+      return;
     }
 
-    let errorTimeout = setTimeout(() => document.body.innerText = 'Failed to capture the screenshot.', 2000);
-    chrome.tabs.setZoom(tab.id, 1.0);
-    const PIXEL_RATIO = getPixelRatio();
+    const prepareCapture = originalZoom => {
+      let errorTimeout = setTimeout(() => document.body.innerText = 'Failed to capture the screenshot.', 10000);
+      const PIXEL_RATIO = getPixelRatio();
+      const cfg = {
+        tab,
+        errorTimeout,
+        url: tab.url,
+        filename: generateFilename(tab.url),
+        targetWidth: 1366,
+        targetHeight: null,
+        totalWidth: null,
+        totalHeight: null,
+        pixelRatio: PIXEL_RATIO,
+        originalWidth: tab.width,
+        originalZoom,
+        margins: {
+          top: 15,
+          bottom: 70,
+          left: 40,
+          right: 40
+        },
+        titleBar: {
+          height: 36,
+          leftWidth: 120,
+          rightWidth: 18,
+          offset: 130,
+          data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKYAAABIBAMAAACO6JO2AAAAMFBMVEUAAADi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uK7u7u+vr7d3d3R0dHV1dXJycnGxsaIaBZ/AAAACHRSTlMAmVXeBuQD1x8rCiYAAAEKSURBVFjD7ZY9CsJAEIUH8QQWYqnYWFtZ2ngDL+BRFISFiP3GvzqCtfEGWlnrCfQIgoVGjCvMyDQPEZlXfjw+yGYzEyIq1loOlXWpTVnqDplmpuw5bMpEVAE7+0QFh06VOnBnlxpw5yAcJ/BAW3DnkBw+5jSnOc35685onyyvqYhkpjujs79nnkpIZrrz6B9ZSUhkunPkn9nKiDPdecjLMxFxpjujJC/HqYg4U51j/8pJRJypzk0oT0TEmerchfJURJypzksoL0TEmepMQjkWEWeq079FRJx91Yl/dvw7wt8l/J3Hf5v4GYKfdfiZjN8d+B2n7+L4moqIsz/7DzGnOc1pTnOa05yfcwPXnJ+jWkDKqgAAAABJRU5ErkJggg=='
+        },
+        shadow: {
+          color: 'rgba(0, 0, 0, 0.5)',
+          blur: 50 * PIXEL_RATIO,
+          offsetX: 0,
+          offsetY: 20 * PIXEL_RATIO,
+          edgeOffset: 3 // shrinks the box generating the shadow so it doesn't show in the rounded the titleBar corners
+        }
+      };
 
-    const cfg = {
-      url: tab.url,
-      filename: generateFilename(tab.url),
-      targetWidth: 1366,
-      targetHeight: null,
-      totalWidth: null,
-      totalHeight: null,
-      pixelRatio: PIXEL_RATIO,
-      originalWidth: tab.width,
-      margins: {
-        top: 15,
-        bottom: 70,
-        left: 40,
-        right: 40
-      },
-      titleBar: {
-        height: 36,
-        leftWidth: 120,
-        rightWidth: 18,
-        offset: 130,
-        data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKYAAABIBAMAAACO6JO2AAAAMFBMVEUAAADi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uK7u7u+vr7d3d3R0dHV1dXJycnGxsaIaBZ/AAAACHRSTlMAmVXeBuQD1x8rCiYAAAEKSURBVFjD7ZY9CsJAEIUH8QQWYqnYWFtZ2ngDL+BRFISFiP3GvzqCtfEGWlnrCfQIgoVGjCvMyDQPEZlXfjw+yGYzEyIq1loOlXWpTVnqDplmpuw5bMpEVAE7+0QFh06VOnBnlxpw5yAcJ/BAW3DnkBw+5jSnOc35685onyyvqYhkpjujs79nnkpIZrrz6B9ZSUhkunPkn9nKiDPdecjLMxFxpjujJC/HqYg4U51j/8pJRJypzk0oT0TEmerchfJURJypzksoL0TEmepMQjkWEWeq079FRJx91Yl/dvw7wt8l/J3Hf5v4GYKfdfiZjN8d+B2n7+L4moqIsz/7DzGnOc1pTnOa05yfcwPXnJ+jWkDKqgAAAABJRU5ErkJggg=='
-      },
-      shadow: {
-        color: 'rgba(0, 0, 0, 0.5)',
-        blur: 50 * PIXEL_RATIO,
-        offsetX: 0,
-        offsetY: 20 * PIXEL_RATIO,
-        edgeOffset: 3 // shrinks the box generating the shadow so it doesn't show in the rounded the titleBar corners
-      }
+      chrome.tabs.setZoom(tab.id, 1.0, () => {
+        setTimeout(() =>
+          chrome.tabs.get(tab.id, tab => {
+            cfg.totalWidth = tab.width;
+            cfg.totalHeight = tab.height;
+            capturePage(cfg);
+          }), 50);
+      });
     };
 
-    chrome.tabs.get(tab.id, function (tab) {
-      cfg.totalWidth = tab.width;
-      cfg.totalHeight = tab.height;
-      capturePage(cfg, errorTimeout);
-    });
+    chrome.tabs.getZoom(tab.id, prepareCapture);
+
   });
-})();
+};
+
+main();
