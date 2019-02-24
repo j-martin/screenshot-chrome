@@ -6,7 +6,7 @@ set -u
 
 _main() {
   pushd ext
-  zip -r ../standardized-screenshot.zip .
+  zip ../standardized-screenshot.zip  . -r -x .DS_Store
   popd
 }
 

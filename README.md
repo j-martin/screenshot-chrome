@@ -5,7 +5,7 @@ A very opinionated screen capture extension for Google Chrome.
 It will:
 
 - Capture the current tab.
-- Add a OS X-ish title bar.
+- Add a macOS-ish title bar.
 - Add drop shadow to it.
 - Display the result in a new tab.
 - Resize the browser window to the original size.
