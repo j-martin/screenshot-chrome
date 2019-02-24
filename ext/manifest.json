@@ -1,6 +1,6 @@
 {
   "name": "Standardized Screenshot",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "manifest_version": 2,
   "description": "Takes standardized screenshots.",
   "browser_action": {
@@ -8,9 +8,7 @@
     "default_popup": "popup.html"
   },
   "permissions": [
-    "activeTab",
-    "storage",
-    "unlimitedStorage"
+    "activeTab"
   ],
   "icons": {
     "16": "icon16.png",
