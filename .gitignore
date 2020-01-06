@@ -1,4 +1,5 @@
-standardized-screenshot.pem
-standardized-screenshot.zip
+*.pem
+*.zip
 .DS_Store
 /.idea
+node_modules/

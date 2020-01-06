@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "fmt": "prettier --write ext/**/*.{js,json,css}"
+  },
+  "devDependencies": {
+    "prettier": "^1.19.1"
+  }
+}

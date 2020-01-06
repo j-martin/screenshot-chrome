@@ -2,24 +2,32 @@
 // Copyright (c) 2015,2018 Jean-Martin Archer
 // Use of this source code is governed by the MIT License found in LICENSE
 
-const capturePage = (cfg) => {
+const capturePage = cfg => {
   const createHiDPICanvas = cfg => {
     const canvas = document.createElement("canvas");
     const w = cfg.totalWidth + cfg.margins.left + cfg.margins.right;
-    const h = cfg.totalHeight + cfg.margins.top + cfg.margins.bottom + cfg.titleBar.height;
+    const h =
+      cfg.totalHeight +
+      cfg.margins.top +
+      cfg.margins.bottom +
+      cfg.titleBar.height;
     canvas.width = w * cfg.pixelRatio;
     canvas.height = h * cfg.pixelRatio;
     canvas.style.width = w + "px";
     canvas.style.height = h + "px";
-    canvas.getContext("2d").setTransform(cfg.pixelRatio, 0, 0, cfg.pixelRatio, 0, 0);
+    canvas
+      .getContext("2d")
+      .setTransform(cfg.pixelRatio, 0, 0, cfg.pixelRatio, 0, 0);
     return canvas;
   };
 
   const canvas = createHiDPICanvas(cfg);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
 
   chrome.tabs.captureVisibleTab(
-    null, { format: 'png', quality: 100 }, dataURI => {
+    null,
+    { format: "png", quality: 100 },
+    dataURI => {
       if (dataURI) {
         const image = new Image();
         const titleBarImage = new Image();
@@ -39,7 +47,8 @@ const capturePage = (cfg) => {
         };
         image.src = dataURI;
       }
-    });
+    }
+  );
 
   const addTitleBar = (ctx, titleBarImage, cfg) => {
     const leftWidth = cfg.titleBar.leftWidth;
@@ -47,22 +56,34 @@ const capturePage = (cfg) => {
     const offset = cfg.titleBar.offset;
 
     const middleBar = {
-      sx: offset, sy: 0,
-      sw: 5, sh: leftWidth * 2,
-      dx: cfg.margins.left + 5, dy: cfg.margins.top,
-      dw: rightDx - cfg.margins.left, dh: leftWidth
+      sx: offset,
+      sy: 0,
+      sw: 5,
+      sh: leftWidth * 2,
+      dx: cfg.margins.left + 5,
+      dy: cfg.margins.top,
+      dw: rightDx - cfg.margins.left,
+      dh: leftWidth
     };
     const leftBar = {
-      sx: 0, sy: 0,
-      sw: offset * 2, sh: leftWidth * 2,
-      dx: cfg.margins.left, dy: cfg.margins.top,
-      dw: offset, dh: leftWidth
+      sx: 0,
+      sy: 0,
+      sw: offset * 2,
+      sh: leftWidth * 2,
+      dx: cfg.margins.left,
+      dy: cfg.margins.top,
+      dw: offset,
+      dh: leftWidth
     };
     const rightBar = {
-      sx: offset, sy: 0,
-      sw: offset * 2, sh: leftWidth * 2,
-      dx: rightDx, dy: cfg.margins.top,
-      dw: offset, dh: leftWidth
+      sx: offset,
+      sy: 0,
+      sw: offset * 2,
+      sh: leftWidth * 2,
+      dx: rightDx,
+      dy: cfg.margins.top,
+      dw: offset,
+      dh: leftWidth
     };
 
     addShadow(ctx, cfg);
@@ -72,7 +93,17 @@ const capturePage = (cfg) => {
   };
 
   const drawBar = (ctx, image, coords) => {
-    ctx.drawImage(image, coords.sx, coords.sy, coords.sw, coords.sh, coords.dx, coords.dy, coords.dw, coords.dh);
+    ctx.drawImage(
+      image,
+      coords.sx,
+      coords.sy,
+      coords.sw,
+      coords.sh,
+      coords.dx,
+      coords.dy,
+      coords.dw,
+      coords.dh
+    );
   };
 
   const addShadow = (ctx, cfg) => {
@@ -80,7 +111,7 @@ const capturePage = (cfg) => {
     const rect = {
       x: cfg.margins.left + cfg.shadow.edgeOffset,
       y: cfg.margins.top + cfg.shadow.edgeOffset,
-      w: cfg.totalWidth - (cfg.shadow.edgeOffset * 2),
+      w: cfg.totalWidth - cfg.shadow.edgeOffset * 2,
       h: cfg.totalHeight + cfg.titleBar.height - cfg.shadow.edgeOffset
     };
     ctx.rect(rect.x, rect.y, rect.w, rect.h);
@@ -94,59 +125,62 @@ const capturePage = (cfg) => {
 };
 
 const showScreenshot = (canvas, cfg) => {
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.download = cfg.filename;
   let dataURL = canvas.toDataURL("image/png");
   link.href = dataURL.replace("image/png", "image/octet-stream");
-  const image = document.createElement('img');
-  image.setAttribute('src', dataURL);
-  image.setAttribute('width', 400);
-  image.setAttribute('title', 'Click to download');
+  const image = document.createElement("img");
+  image.setAttribute("src", dataURL);
+  image.setAttribute("width", 400);
+  image.setAttribute("title", "Click to download");
   link.appendChild(image);
-  document.body.innerText = '';
+  document.body.innerText = "";
   document.body.appendChild(link);
   clearTimeout(cfg.errorTimeout);
   chrome.tabs.setZoom(cfg.tab.id, cfg.originalZoom);
 };
 
 const generateFilename = url => {
-  let name = url.split('?')[0].split('#')[0];
+  let name = url.split("?")[0].split("#")[0];
   if (name) {
     name = name
-      .replace(/^https?:\/\//, '')
-      .replace(/[^A-z0-9]+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^[_\-]+/, '')
-      .replace(/[_\-]+$/, '')
+      .replace(/^https?:\/\//, "")
+      .replace(/[^A-z0-9]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^[_\-]+/, "")
+      .replace(/[_\-]+$/, "")
       .slice(0, 64);
-    name = '-' + name;
+    name = "-" + name;
   } else {
-    name = '';
+    name = "";
   }
-  name = 'screenshot' + name + '-' + Date.now() + '.png';
+  name = "screenshot" + name + "-" + Date.now() + ".png";
   return name;
 };
 
 const getPixelRatio = () => {
   const ctx = document.createElement("canvas").getContext("2d"),
     dpr = window.devicePixelRatio || 1,
-    bsr = ctx.webkitBackingStorePixelRatio ||
-      ctx.backingStorePixelRatio || 1;
+    bsr = ctx.webkitBackingStorePixelRatio || ctx.backingStorePixelRatio || 1;
   return dpr / bsr;
 };
 
 const main = () => {
   chrome.tabs.getSelected(null, tab => {
-    if (tab.url.indexOf('chrome.google.com') > 0) {
-      document.body.innerText = 'Unfortunately, due to a restrictions with Google Chrome, ' +
-        'it is not possible to capture a screenshot of: ' +
-        'chrome.google.com.' +
-        '\n\nOther websites should work fine.';
+    if (tab.url.indexOf("chrome.google.com") > 0) {
+      document.body.innerText =
+        "Unfortunately, due to a restrictions with Google Chrome, " +
+        "it is not possible to capture a screenshot of: " +
+        "chrome.google.com." +
+        "\n\nOther websites should work fine.";
       return;
     }
 
     const prepareCapture = originalZoom => {
-      let errorTimeout = setTimeout(() => document.body.innerText = 'Failed to capture the screenshot.', 10000);
+      let errorTimeout = setTimeout(
+        () => (document.body.innerText = "Failed to capture the screenshot."),
+        10000
+      );
       const PIXEL_RATIO = getPixelRatio();
       const cfg = {
         tab,
@@ -171,10 +205,11 @@ const main = () => {
           leftWidth: 120,
           rightWidth: 18,
           offset: 130,
-          data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKYAAABIBAMAAACO6JO2AAAAMFBMVEUAAADi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uK7u7u+vr7d3d3R0dHV1dXJycnGxsaIaBZ/AAAACHRSTlMAmVXeBuQD1x8rCiYAAAEKSURBVFjD7ZY9CsJAEIUH8QQWYqnYWFtZ2ngDL+BRFISFiP3GvzqCtfEGWlnrCfQIgoVGjCvMyDQPEZlXfjw+yGYzEyIq1loOlXWpTVnqDplmpuw5bMpEVAE7+0QFh06VOnBnlxpw5yAcJ/BAW3DnkBw+5jSnOc35685onyyvqYhkpjujs79nnkpIZrrz6B9ZSUhkunPkn9nKiDPdecjLMxFxpjujJC/HqYg4U51j/8pJRJypzk0oT0TEmerchfJURJypzksoL0TEmepMQjkWEWeq079FRJx91Yl/dvw7wt8l/J3Hf5v4GYKfdfiZjN8d+B2n7+L4moqIsz/7DzGnOc1pTnOa05yfcwPXnJ+jWkDKqgAAAABJRU5ErkJggg=='
+          data:
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKYAAABIBAMAAACO6JO2AAAAMFBMVEUAAADi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uK7u7u+vr7d3d3R0dHV1dXJycnGxsaIaBZ/AAAACHRSTlMAmVXeBuQD1x8rCiYAAAEKSURBVFjD7ZY9CsJAEIUH8QQWYqnYWFtZ2ngDL+BRFISFiP3GvzqCtfEGWlnrCfQIgoVGjCvMyDQPEZlXfjw+yGYzEyIq1loOlXWpTVnqDplmpuw5bMpEVAE7+0QFh06VOnBnlxpw5yAcJ/BAW3DnkBw+5jSnOc35685onyyvqYhkpjujs79nnkpIZrrz6B9ZSUhkunPkn9nKiDPdecjLMxFxpjujJC/HqYg4U51j/8pJRJypzk0oT0TEmerchfJURJypzksoL0TEmepMQjkWEWeq079FRJx91Yl/dvw7wt8l/J3Hf5v4GYKfdfiZjN8d+B2n7+L4moqIsz/7DzGnOc1pTnOa05yfcwPXnJ+jWkDKqgAAAABJRU5ErkJggg=="
         },
         shadow: {
-          color: 'rgba(0, 0, 0, 0.5)',
+          color: "rgba(0, 0, 0, 0.5)",
           blur: 50 * PIXEL_RATIO,
           offsetX: 0,
           offsetY: 20 * PIXEL_RATIO,
@@ -183,17 +218,19 @@ const main = () => {
       };
 
       chrome.tabs.setZoom(tab.id, 1.0, () => {
-        setTimeout(() =>
-          chrome.tabs.get(tab.id, tab => {
-            cfg.totalWidth = tab.width;
-            cfg.totalHeight = tab.height;
-            capturePage(cfg);
-          }), 50);
+        setTimeout(
+          () =>
+            chrome.tabs.get(tab.id, tab => {
+              cfg.totalWidth = tab.width;
+              cfg.totalHeight = tab.height;
+              capturePage(cfg);
+            }),
+          50
+        );
       });
     };
 
     chrome.tabs.getZoom(tab.id, prepareCapture);
-
   });
 };
 
