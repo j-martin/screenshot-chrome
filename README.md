@@ -7,8 +7,7 @@ It will:
 - Capture the current tab.
 - Add a macOS-ish title bar.
 - Add drop shadow to it.
-- Display the result in a new tab.
-- Resize the browser window to the original size.
+- Display the result in a popup frame.
 
 ![image](screenshots/example.png)
 
