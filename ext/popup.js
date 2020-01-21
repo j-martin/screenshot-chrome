@@ -195,10 +195,10 @@ const main = () => {
         originalWidth: tab.width,
         originalZoom,
         margins: {
-          top: 15,
-          bottom: 70,
-          left: 40,
-          right: 40
+          top: 40,
+          bottom: 100,
+          left: 70,
+          right: 70
         },
         titleBar: {
           height: 36,
