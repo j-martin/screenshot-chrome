@@ -166,7 +166,9 @@ const getPixelRatio = () => {
 };
 
 const main = () => {
-  chrome.tabs.getSelected(null, tab => {
+  chrome.tabs.query({ active: true, lastFocusedWindow: true}, tabs => {
+    const tab = tabs[0]
+
     if (tab.url.indexOf("chrome.google.com") > 0) {
       document.body.innerText =
         "Unfortunately, due to a restrictions with Google Chrome, " +
@@ -175,6 +177,7 @@ const main = () => {
         "\n\nOther websites should work fine.";
       return;
     }
+
 
     const prepareCapture = originalZoom => {
       let errorTimeout = setTimeout(
