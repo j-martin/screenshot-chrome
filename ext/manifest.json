@@ -1,14 +1,12 @@
 {
   "name": "Standardized Screenshot",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "manifest_version": 3,
   "description": "Takes standardized screenshots.",
   "content_security_policy": {
     "extension_pages": "default-src 'self'; img-src 'self' data:; style-src 'self'"
   },
-  "permissions": [
-    "activeTab"
-  ],
+  "permissions": ["activeTab"],
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",

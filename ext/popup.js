@@ -21,31 +21,37 @@ const capturePage = cfg => {
     return canvas;
   };
 
-  const canvas = createHiDPICanvas(cfg);
-  const ctx = canvas.getContext("2d");
+  const generateScreenshot = (dataURI, titleBarData) => {
+    const canvas = createHiDPICanvas(cfg);
+    const ctx = canvas.getContext("2d");
+
+    const image = new Image();
+    const titleBarImage = new Image();
+    titleBarImage.onload = () => {
+      addTitleBar(ctx, titleBarImage, cfg);
+    };
+    titleBarImage.src = titleBarData;
+    image.onload = () => {
+      const coords = {
+        x: cfg.margins.left,
+        y: cfg.margins.top + cfg.titleBar.height,
+        w: cfg.totalWidth,
+        h: cfg.totalHeight
+      };
+      ctx.drawImage(image, coords.x, coords.y, coords.w, coords.h);
+      showScreenshot(canvas, cfg);
+    };
+    image.src = dataURI;
+  }
 
   chrome.tabs.captureVisibleTab(
     null,
     { format: "png", quality: 100 },
     dataURI => {
       if (dataURI) {
-        const image = new Image();
-        const titleBarImage = new Image();
-        titleBarImage.onload = () => {
-          addTitleBar(ctx, titleBarImage, cfg);
-        };
-        titleBarImage.src = cfg.titleBar.data;
-        image.onload = () => {
-          const coords = {
-            x: cfg.margins.left,
-            y: cfg.margins.top + cfg.titleBar.height,
-            w: cfg.totalWidth,
-            h: cfg.totalHeight
-          };
-          ctx.drawImage(image, coords.x, coords.y, coords.w, coords.h);
-          showScreenshot(canvas, cfg);
-        };
-        image.src = dataURI;
+        document.body.innerText = "";
+        generateScreenshot(dataURI, cfg.titleBar.data)
+        generateScreenshot(dataURI, cfg.titleBar.dataDark)
       }
     }
   );
@@ -134,7 +140,6 @@ const showScreenshot = (canvas, cfg) => {
   image.setAttribute("width", 400);
   image.setAttribute("title", "Click to download");
   link.appendChild(image);
-  document.body.innerText = "";
   document.body.appendChild(link);
   clearTimeout(cfg.errorTimeout);
   chrome.tabs.setZoom(cfg.tab.id, cfg.originalZoom);
@@ -166,8 +171,8 @@ const getPixelRatio = () => {
 };
 
 const main = () => {
-  chrome.tabs.query({ active: true, lastFocusedWindow: true}, tabs => {
-    const tab = tabs[0]
+  chrome.tabs.query({ active: true, lastFocusedWindow: true }, tabs => {
+    const tab = tabs[0];
 
     if (tab.url.indexOf("chrome.google.com") > 0) {
       document.body.innerText =
@@ -177,7 +182,6 @@ const main = () => {
         "\n\nOther websites should work fine.";
       return;
     }
-
 
     const prepareCapture = originalZoom => {
       let errorTimeout = setTimeout(
@@ -209,7 +213,9 @@ const main = () => {
           rightWidth: 18,
           offset: 130,
           data:
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKYAAABIBAMAAACO6JO2AAAAMFBMVEUAAADi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uK7u7u+vr7d3d3R0dHV1dXJycnGxsaIaBZ/AAAACHRSTlMAmVXeBuQD1x8rCiYAAAEKSURBVFjD7ZY9CsJAEIUH8QQWYqnYWFtZ2ngDL+BRFISFiP3GvzqCtfEGWlnrCfQIgoVGjCvMyDQPEZlXfjw+yGYzEyIq1loOlXWpTVnqDplmpuw5bMpEVAE7+0QFh06VOnBnlxpw5yAcJ/BAW3DnkBw+5jSnOc35685onyyvqYhkpjujs79nnkpIZrrz6B9ZSUhkunPkn9nKiDPdecjLMxFxpjujJC/HqYg4U51j/8pJRJypzk0oT0TEmerchfJURJypzksoL0TEmepMQjkWEWeq079FRJx91Yl/dvw7wt8l/J3Hf5v4GYKfdfiZjN8d+B2n7+L4moqIsz/7DzGnOc1pTnOa05yfcwPXnJ+jWkDKqgAAAABJRU5ErkJggg=="
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKYAAABIBAMAAACO6JO2AAAAMFBMVEUAAADi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uK7u7u+vr7d3d3R0dHV1dXJycnGxsaIaBZ/AAAACHRSTlMAmVXeBuQD1x8rCiYAAAEKSURBVFjD7ZY9CsJAEIUH8QQWYqnYWFtZ2ngDL+BRFISFiP3GvzqCtfEGWlnrCfQIgoVGjCvMyDQPEZlXfjw+yGYzEyIq1loOlXWpTVnqDplmpuw5bMpEVAE7+0QFh06VOnBnlxpw5yAcJ/BAW3DnkBw+5jSnOc35685onyyvqYhkpjujs79nnkpIZrrz6B9ZSUhkunPkn9nKiDPdecjLMxFxpjujJC/HqYg4U51j/8pJRJypzk0oT0TEmerchfJURJypzksoL0TEmepMQjkWEWeq079FRJx91Yl/dvw7wt8l/J3Hf5v4GYKfdfiZjN8d+B2n7+L4moqIsz/7DzGnOc1pTnOa05yfcwPXnJ+jWkDKqgAAAABJRU5ErkJggg==",
+          dataDark:
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKYAAABICAMAAABLGH63AAAAP1BMVEVHcEwqKioqKioAAAArKysqKioqKiopKSkzMzMrKytkZGQqKioxMTFQUFBhYWFFRUU8PDxUVFReXl5jY2NDQ0MwiPaiAAAACnRSTlMA+aUC3FXgUQWKYtOSQwAAARlJREFUaN7t2NsKwjAQhOFp7TFJz77/s3ojRWwudrcgWZm5/gkfiDUVAIChrbsqFreqq9sB5/omFrumfyMfYyx64wMAULgyxhEA+lj8emBoymc2A9roYC1qD8wanQdmh8oDs0J0MTLJJJNMMskkk8yCmGnZ9uPYtyXdr+SdkpmmcG5K9yp5p2Wuc/jYvN6p5J2W+Qxfe9oreadlruGy1VrJOy0zzdeD52Sr5J2aOYXMJlsl77TMFLJLlkreqZlL/uDFUsk7NXPLH7xZKnmnZu75g3dLJe/UzCN/8GGp5N2/Mp186E6+Qk4eSE4e705+LL1cPZxc5Lxci728ZHh5ZfPyAsx/Pcgkk0wyySSTTDLJJJNMMskk85d7AdA6/sDgopk5AAAAAElFTkSuQmCC"
         },
         shadow: {
           color: "rgba(0, 0, 0, 0.5)",
